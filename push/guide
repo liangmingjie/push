@@ -1,0 +1,12 @@
+rem=/mnt/term/usr/local/plan9/src/cmd/push/
+@{for(i in *){
+	f=`{basename $i}
+	if(test -e $rem/$f)
+		diff $rem/$f $i
+} >pushdiff
+
+
+gf main
+
+
+rc -r -c 'x=cat echo hello word | $x' >fout.out >[2=1]
