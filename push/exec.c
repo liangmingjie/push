@@ -9,6 +9,26 @@
 char *argv0="rc";
 
 void
+startargv(code *c, int pc, var *local, list *argv)
+{
+	struct thread *p = new(struct thread);
+
+	p->code = codecopy(c);
+	p->pc = pc;
+	p->argv = argv;
+	p->redir = p->startredir = runq?runq->redir:0;
+	p->local = local;
+	p->cmdfile = 0;
+	p->cmdfd = 0;
+	p->eof = 0;
+	p->iflag = 0;
+	p->lineno = 1;
+	p->ret = runq;
+	runq = p;
+
+}
+
+void
 start(code *c, int pc, var *local)
 {
 	struct thread *p = new(struct thread);
@@ -25,7 +45,6 @@ start(code *c, int pc, var *local)
 	p->lineno = 1;
 	p->ret = runq;
 	runq = p;
-
 }
 
 word*
@@ -120,6 +139,7 @@ newvar(char *name, var *next)
 	v->changed = 0;
 	v->fnchanged = 0;
 	v->next = next;
+	v->changefn = 0;
 	return v;
 }
 /*
@@ -129,14 +149,16 @@ newvar(char *name, var *next)
  * fabricate bootstrap code and start it (*=(argv);. /usr/lib/rcmain $*)
  * start interpreting code
  */
-
-void
+int
 main(int argc, char *argv[])
 {
-	code bootstrap[17];
+	code bootstrap[32];
 	char num[12], *rcmain;
 	int i;
-	argc = getflags(argc, argv, "SsrdiIlxepvVc:1m:1[command]", 1);
+	
+	/* needed for rcmain later */
+	putenv("PLAN9", unsharp("#9"));
+	argc = getflags(argc, argv, "ftjSsrdiIlxepvVc:1m:1[command]", 1);
 	if(argc==-1)
 		usage("[file [arg ...]]");
 	if(argv[0][0]=='-')
@@ -144,12 +166,13 @@ main(int argc, char *argv[])
 	if(flag['I'])
 		flag['i'] = 0;
 	else if(flag['i']==0 && argc==1 && Isatty(0)) flag['i'] = flagset;
-	rcmain = flag['m']?flag['m'][0]:Rcmain; 
+	rcmain = flag['m'] ? flag['m'][0] : Rcmain();
 	err = openfd(2);
 	kinit();
 	Trapinit();
 	Vinit();
 	inttoascii(num, mypid = getpid());
+	pathinit();
 	setvar("pid", newword(num, (word *)0));
 	setvar("cflag", flag['c']?newword(flag['c'][0], (word *)0)
 				:(word *)0);
@@ -552,9 +575,9 @@ conclist(word *lp, word *rp, word *tail)
 	char *buf;
 	word *v;
 	if(lp->next || rp->next)
-		tail = conclist(lp->next==0? lp: lp->next,
-			rp->next==0? rp: rp->next, tail);
-	buf = emalloc(strlen(lp->word)+strlen((char *)rp->word)+1);
+		tail = conclist(lp->next==0?lp:lp->next, rp->next==0?rp:rp->next,
+			tail);
+	buf = emalloc(strlen(lp->word)+strlen(rp->word)+1);
 	strcpy(buf, lp->word);
 	strcat(buf, rp->word);
 	v = newword(buf, tail);
@@ -600,6 +623,8 @@ Xassign(void)
 	freewords(v->val);
 	v->val = runq->argv->words;
 	v->changed = 1;
+	if(v->changefn)
+		v->changefn(v);
 	runq->argv->words = 0;
 	poplist();
 }
@@ -623,6 +648,10 @@ Xdol(void)
 	word *a, *star;
 	char *s, *t;
 	int n;
+	if(runq->argv == 0) {
+		Xerror1("need to set up argv");
+		return;	
+	}
 	if(count(runq->argv->words)!=1){
 		Xerror1("variable name not singleton!");
 		return;
@@ -782,11 +811,9 @@ Xlocal(void)
 	}
 	deglob(runq->argv->words->word);
 	runq->local = newvar(strdup(runq->argv->words->word), runq->local);
-	poplist();
-	globlist();
-	runq->local->val = runq->argv->words;
+	runq->local->val = copywords(runq->argv->next->words, (word *)0);
 	runq->local->changed = 1;
-	runq->argv->words = 0;
+	poplist();
 	poplist();
 }
 
@@ -823,7 +850,6 @@ Xfn(void)
 	word *a;
 	int end;
 	end = runq->code[runq->pc].i;
-	globlist();
 	for(a = runq->argv->words;a;a = a->next){
 		v = gvlook(a->word);
 		if(v->fn)

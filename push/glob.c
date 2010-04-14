@@ -8,9 +8,8 @@ struct word *globv;
  */
 
 void
-deglob(void *as)
+deglob(char *s)
 {
-	char *s = as;
 	char *t = s;
 	do{
 		if(*t==GLOB)
@@ -44,9 +43,9 @@ globsort(word *left, word *right)
  */
 
 void
-globdir(uchar *p, uchar *namep)
+globdir(char *p, char *namep)
 {
-	uchar *t, *newp;
+	char *t, *newp;
 	int f;
 	/* scan the pattern looking for a component with a metacharacter in it */
 	if(*p=='\0'){
@@ -89,24 +88,22 @@ globdir(uchar *p, uchar *namep)
  */
 
 void
-glob(void *ap)
+glob(char *p)
 {
-	uchar *p = ap;
 	word *svglobv = globv;
-	int globlen = Globsize(ap);
-
+	int globlen = Globsize(p);
 	if(!globlen){
 		deglob(p);
-		globv = newword((char *)p, globv);
+		globv = newword(p, globv);
 		return;
 	}
 	globname = emalloc(globlen);
 	globname[0]='\0';
-	globdir(p, (uchar *)globname);
+	globdir(p, globname);
 	efree(globname);
 	if(svglobv==globv){
 		deglob(p);
-		globv = newword((char *)p, globv);
+		globv = newword(p, globv);
 	}
 	else
 		globsort(globv, svglobv);
@@ -116,7 +113,7 @@ glob(void *ap)
  */
 
 int
-equtf(uchar *p, uchar *q)
+equtf(char *p, char *q)
 {
 	if(*p!=*q)
 		return 0;
@@ -135,8 +132,8 @@ equtf(uchar *p, uchar *q)
  * not jumping past nuls in broken utf codes!
  */
 
-uchar*
-nextutf(uchar *p)
+char*
+nextutf(char *p)
 {
 	if(twobyte(*p)) return p[1]=='\0'?p+1:p+2;
 	if(threebyte(*p)) return p[1]=='\0'?p+1:p[2]=='\0'?p+2:p+3;
@@ -147,14 +144,11 @@ nextutf(uchar *p)
  */
 
 int
-unicode(uchar *p)
+unicode(char *p)
 {
-	int u = *p;
-
-	if(twobyte(u))
-		return ((u&0x1f)<<6)|(p[1]&0x3f);
-	if(threebyte(u))
-		return (u<<12)|((p[1]&0x3f)<<6)|(p[2]&0x3f);
+	int u=*p&0xff;
+	if(twobyte(u)) return ((u&0x1f)<<6)|(p[1]&0x3f);
+	if(threebyte(u)) return (u<<12)|((p[1]&0x3f)<<6)|(p[2]&0x3f);
 	return u;
 }
 /*
@@ -166,22 +160,18 @@ unicode(uchar *p)
  */
 
 int
-matchfn(void *as, void *ap)
+matchfn(char *s, char *p)
 {
-	uchar *s = as, *p = ap;
-
 	if(s[0]=='.' && (s[1]=='\0' || s[1]=='.' && s[2]=='\0') && p[0]!='.')
 		return 0;
 	return match(s, p, '/');
 }
 
 int
-match(void *as, void *ap, int stop)
+match(char *s, char *p, int stop)
 {
 	int compl, hit, lo, hi, t, c;
-	uchar *s = as, *p = ap;
-
-	for(; *p!=stop && *p!='\0'; s = nextutf(s), p = nextutf(p)){
+	for(;*p!=stop && *p!='\0';s = nextutf(s),p = nextutf(p)){
 		if(*p!=GLOB){
 			if(!equtf(p, s)) return 0;
 		}

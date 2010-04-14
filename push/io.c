@@ -2,9 +2,6 @@
 #include "exec.h"
 #include "io.h"
 #include "fns.h"
-
-enum { Stralloc = 100, };
-
 int pfmtnest = 0;
 
 void
@@ -12,17 +9,15 @@ pfmt(io *f, char *fmt, ...)
 {
 	va_list ap;
 	char err[ERRMAX];
-
 	va_start(ap, fmt);
 	pfmtnest++;
-	for(;*fmt;fmt++) {
-		if(*fmt!='%') {
+	for(;*fmt;fmt++)
+		if(*fmt!='%')
 			pchr(f, *fmt);
-			continue;
-		}
-		if(*++fmt == '\0')		/* "blah%"? */
-			break;
-		switch(*fmt){
+		else switch(*++fmt){
+		case '\0':
+			va_end(ap);
+			return;
 		case 'c':
 			pchr(f, va_arg(ap, int));
 			break;
@@ -42,7 +37,7 @@ pfmt(io *f, char *fmt, ...)
 			pwrd(f, va_arg(ap, char *));
 			break;
 		case 'r':
-			errstr(err, sizeof err); pstr(f, err);
+			rerrstr(err, sizeof err); pstr(f, err);
 			break;
 		case 's':
 			pstr(f, va_arg(ap, char *));
@@ -57,7 +52,6 @@ pfmt(io *f, char *fmt, ...)
 			pchr(f, *fmt);
 			break;
 		}
-	}
 	va_end(ap);
 	if(--pfmtnest==0)
 		flush(f);
@@ -76,7 +70,7 @@ rchr(io *b)
 {
 	if(b->bufp==b->ebuf)
 		return emptybuf(b);
-	return *b->bufp++;
+	return *b->bufp++ & 0xFF;
 }
 
 void
@@ -94,7 +88,7 @@ void
 pwrd(io *f, char *s)
 {
 	char *t;
-	for(t = s;*t;t++) if(*t >= 0 && needsrcquote(*t)) break;
+	for(t = s;*t;t++) if(!wordchr(*t)) break;
 	if(t==s || *t)
 		pquo(f, s);
 	else pstr(f, s);
@@ -156,11 +150,11 @@ pval(io *f, word *a)
 {
 	if(a){
 		while(a->next && a->next->word){
-			pwrd(f, (char *)a->word);
+			pwrd(f, a->word);
 			pchr(f, ' ');
 			a = a->next;
 		}
-		pwrd(f, (char *)a->word);
+		pwrd(f, a->word);
 	}
 }
 
@@ -175,20 +169,20 @@ void
 flush(io *f)
 {
 	int n;
-
+	char *s;
 	if(f->strp){
-		n = f->ebuf - f->strp;
-		f->strp = realloc(f->strp, n+Stralloc+1);
+		n = f->ebuf-f->strp;
+		f->strp = realloc(f->strp, n+101);
 		if(f->strp==0)
-			panic("Can't realloc %d bytes in flush!", n+Stralloc+1);
-		f->bufp = f->strp + n;
-		f->ebuf = f->bufp + Stralloc;
-		memset(f->bufp, '\0', Stralloc+1);
+			panic("Can't realloc %d bytes in flush!", n+101);
+		f->bufp = f->strp+n;
+		f->ebuf = f->bufp+100;
+		for(s = f->bufp;s<=f->ebuf;s++) *s='\0';
 	}
 	else{
 		n = f->bufp-f->buf;
-		if(n && Write(f->fd, f->buf, n) != n){
-			Write(2, "Write error\n", 12);
+		if(n && Write(f->fd, f->buf, n) < 0){
+			Write(3, "Write error\n", 12);
 			if(ntrap)
 				dotrap();
 		}
@@ -211,11 +205,11 @@ io*
 openstr(void)
 {
 	io *f = new(struct io);
-
-	f->fd = -1;
-	f->bufp = f->strp = emalloc(Stralloc+1);
-	f->ebuf = f->bufp + Stralloc;
-	memset(f->bufp, '\0', Stralloc+1);
+	char *s;
+	f->fd=-1;
+	f->bufp = f->strp = emalloc(101);
+	f->ebuf = f->bufp+100;
+	for(s = f->bufp;s<=f->ebuf;s++) *s='\0';
 	return f;
 }
 /*
@@ -227,9 +221,8 @@ io*
 opencore(char *s, int len)
 {
 	io *f = new(struct io);
-	uchar *buf = emalloc(len);
-
-	f->fd = -1 /*open("/dev/null", 0)*/;
+	char *buf = emalloc(len);
+	f->fd= -1 /*open("/dev/null", 0)*/;
 	f->bufp = f->strp = buf;
 	f->ebuf = buf+len;
 	Memcpy(buf, s, len);
@@ -237,7 +230,7 @@ opencore(char *s, int len)
 }
 
 void
-rewind(io *io)
+iorewind(io *io)
 {
 	if(io->fd==-1)
 		io->bufp = io->strp;
@@ -254,7 +247,7 @@ closeio(io *io)
 		close(io->fd);
 	if(io->strp)
 		efree(io->strp);
-	efree(io);
+	efree((char *)io);
 }
 
 int
@@ -263,6 +256,6 @@ emptybuf(io *f)
 	int n;
 	if(f->fd==-1 || (n = Read(f->fd, f->buf, NBUF))<=0) return EOF;
 	f->bufp = f->buf;
-	f->ebuf = f->buf + n;
-	return *f->bufp++;
+	f->ebuf = f->buf+n;
+	return *f->bufp++&0xff;
 }

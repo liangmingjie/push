@@ -16,21 +16,22 @@
 #define	FANOUT	57361
 #define	SUB	57362
 #define	SIMPLE	57363
-#define	ARGLIST	57364
-#define	WORDS	57365
-#define	BRACE	57366
-#define	PAREN	57367
-#define	PCMD	57368
-#define	PIPEFD	57369
-#define	ANDAND	57370
-#define	OROR	57371
-#define	COUNT	57372
+#define	FILTER	57364
+#define	ARGLIST	57365
+#define	WORDS	57366
+#define	BRACE	57367
+#define	PAREN	57368
+#define	PCMD	57369
+#define	PIPEFD	57370
+#define	ANDAND	57371
+#define	OROR	57372
+#define	COUNT	57373
 
-#line	13	"/usr/npe/src/cmd/push/syn.y"
+#line	13	"/usr/local/plan9/src/cmd/push/syn.y"
 #include "rc.h"
 #include "fns.h"
 
-#line	16	"/usr/npe/src/cmd/push/syn.y"
+#line	16	"/usr/local/plan9/src/cmd/push/syn.y"
 typedef union {
 	struct tree *tree;
 } YYSTYPE;
@@ -42,7 +43,7 @@ YYSTYPE	yylval;
 YYSTYPE	yyval;
 #define YYEOFCODE 1
 #define YYERRCODE 2
-short	yyexca[] =
+static	const	short	yyexca[] =
 {-1, 0,
 	1, 1,
 	-2, 18,
@@ -52,70 +53,68 @@ short	yyexca[] =
 };
 #define	YYNPROD	72
 #define	YYPRIVATE 57344
-#define	YYLAST	374
-short	yyact[] =
+#define	YYLAST	352
+static	const	short	yyact[] =
 {
-  67,   3,  71,  65,  66,   3,  33,  41,  34,  40,
-  42,  12,  70,  61,  62,  63,  64,  37,  31,  32,
-  94,  17,  59,  36,  95,  29,  30,  28,  21,  90,
- 104,  78,  79,  80,  81,  82, 105,  99,  46,  46,
-  46,  41,  33,  89,  34,  93,  86,  88,  46,  37,
- 113,  46,  46,  46, 117,  44,  58,  60,  85, 106,
-  84,  83,  90,   5,  91,  72,   1,  46,  74,  75,
-  76,  46,   2,  96,  38,  20,  45,  35,  39,  33,
- 101,  34,  18,  73,  72, 102, 103,  43,  87, 107,
-  77,  31,  32,  33,  46,  34,  69,   4,  10,  46,
-  46,   4, 111, 110,  13,  31,  32,  46,  68, 112,
-   0,   0,  29,  30, 116,   0,  97,  98, 118,  46,
-  46,  73,  33,   0,  34,   0,   0,   0,   0,  92,
-   0,   0,   0,   0,  31,  32, 109,   0,   0,  46,
+  67,   3,  71,  65,  66,   3,  33,  41,  34,  33,
+  40,  34,  70,  61,  62,  63,  64,  42,  94,  31,
+  32,  17,  31,  32,  36,  95,  29,  30,  21,  29,
+  30,  78,  79,  80,  81,  82,  12,  28,  46,  46,
+  46,  90,  37,  41, 104,  93,  86,  59,  46,  99,
+  39,  46,  46,  46,  89,  44,  58,  60,  33,  43,
+  34,   2,  83,   5,  91,  72,  35,  46,  74,  75,
+  76,  46,  88,  96,  37,  38,  20, 105,  33, 101,
+  34, 113, 117,  73,  72, 102, 103,  85,  87, 107,
+  77,  31,  32,  84,  46,   1,  45,  18,  10,  46,
+  46, 106, 111, 110,  90,  13,  68,  46,   0, 112,
+  33,   0,  34,   0, 116,   0,  97,  98, 118,  46,
+  46,  73,   0,  31,  32,  69,   4,   0,   0,  92,
+   4,   0,   0,   0,   0,   0, 109,   0,   0,  46,
    0,  46,   0,   0,   0,   0,   0,   0,   0,   0,
    0,   0,   0, 108,  47,  48,  49,  50,  51,  52,
-  53,  54,  55,  56,  25,  57,   0,   0,   0,   0,
-   0,   0,   0,   0,   0,   0,   0,   0, 115,   0,
-   0,   0,  22,  24,  23,   0,   0,   0,   0,   0,
-  27,   0,  26,  47,  48,  49,  50,  51,  52,  53,
-  54,  55,  56,  25,  57,   0,   0,   0,   0,   0,
-   0,   0,   0,   0,   0,   0,   0, 114,   0,   0,
-   0,  22,  24,  23,   0,   0,   0,   0,   0,  27,
-   0,  26,  47,  48,  49,  50,  51,  52,  53,  54,
-  55,  56,  25,  57,  47,  48,  49,  50,  51,  52,
-  53,  54,  55,  56,  25,  57, 100,   0,   0,   0,
-  22,  24,  23,   0,   0,   0,   0,   0,  27,   0,
-  26,   0,  22,  24,  23,   0,   0,   0,  17,   0,
-  27,   0,  26,  47,  48,  49,  50,  51,  52,  53,
-  54,  55,  56,  25,  19,  20,   7,   0,   8,   6,
-   0,  11,  14,  15,   9,  16,  25,  19,  20,   0,
-   0,  22,  24,  23,   0,   0,   0,   0,   0,  27,
-   0,  26,   0,   0,  22,  24,  23,   0,   0,   0,
-  17,   0,  27,   0,  26,  47,  48,  49,  50,  51,
-  52,  53,  54,  55,  56,  25,  57,   0,   0,   0,
-   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+  53,  54,  55,  56,  25,  57,   0,  47,  48,  49,
+  50,  51,  52,  53,  54,  55,  56,  25,  57, 115,
    0,   0,   0,  22,  24,  23,   0,   0,   0,   0,
-   0,  27,   0,  26
+   0,  27, 114,  26,   0,   0,  22,  24,  23,   0,
+   0,   0,   0,   0,  27,   0,  26,  47,  48,  49,
+  50,  51,  52,  53,  54,  55,  56,  25,  57,  47,
+  48,  49,  50,  51,  52,  53,  54,  55,  56,  25,
+  57,   0, 100,   0,   0,   0,  22,  24,  23,   0,
+   0,   0,   0,   0,  27,   0,  26,   0,  22,  24,
+  23,   0,   0,   0,  17,   0,  27,   0,  26,  47,
+  48,  49,  50,  51,  52,  53,  54,  55,  56,  25,
+  19,  20,   7,   0,   8,   6,   0,  11,  14,  15,
+   9,  16,  25,  19,  20,   0,   0,   0,  22,  24,
+  23,   0,   0,   0,   0,   0,  27,   0,  26,   0,
+   0,  22,  24,  23,   0,   0,   0,  17,   0,  27,
+   0,  26,  47,  48,  49,  50,  51,  52,  53,  54,
+  55,  56,  25,  57,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,  22,  24,  23,   0,   0,   0,   0,   0,  27,
+   0,  26
 };
-short	yypact[] =
+static	const	short	yypact[] =
 {
- 292,-1000,  -8,  76, 292,  59,   1, -30, -33, 331,
- 279, 331, 292, 292, 292, 292,-1000, 292, -29, 240,
--1000,-1000, 331, 331, 331,-1000, -17,-1000,-1000,-1000,
--1000, 292, 292, 292, 292,-1000,-1000,  59, 331,-1000,
--1000, 292, 331,-1000,  -2,-1000,-1000,-1000,-1000,-1000,
--1000,-1000,-1000,-1000,-1000,-1000,-1000, -17,  -2,-1000,
-  -2,  25,  25,  25,  25, 240, -19, -11, 292,-1000,
- 331, 331,  -2,-1000,  17,-1000,-1000,-1000, 228,  25,
-  25,-1000,  62,-1000, 292, 292,   2,  31, 292, -17,
- 331, 331,-1000,  -2,-1000,-1000,-1000,  -2,-1000,-1000,
--1000, 292, 105, 105,-1000,-1000,-1000, 105,-1000,-1000,
- 189,-1000, 150, 292,-1000,-1000, 105, 292, 105
+ 268,-1000,   1,  -8, 268,  60,   2, -24, -34, 308,
+ 255, 308, 268, 268, 268, 268,-1000, 268, -30, 215,
+-1000,-1000, 308, 308, 308,-1000, -18,-1000,-1000,-1000,
+-1000, 268, 268, 268, 268,-1000,-1000,  60, 308,-1000,
+-1000, 268, 308,-1000,   9,-1000,-1000,-1000,-1000,-1000,
+-1000,-1000,-1000,-1000,-1000,-1000,-1000, -18,   9,-1000,
+   9,  41,  41,  41,  41, 215, -22, -11, 268,-1000,
+ 308, 308,   9,-1000,  29,-1000,-1000,-1000, 203,  41,
+  41,-1000,  61,-1000, 268, 268,  15,  72, 268, -18,
+ 308, 308,-1000,   9,-1000,-1000,-1000,   9,-1000,-1000,
+-1000, 268,  93,  93,-1000,-1000,-1000,  93,-1000,-1000,
+ 163,-1000, 150, 268,-1000,-1000,  93, 268,  93
 };
-short	yypgo[] =
+static	const	short	yypgo[] =
 {
-   0,  72,  78,  63,   4,  96, 108, 104,  23,  11,
-   0,  98,  82,  45,  28,  76,   3,  66,  60,  58,
-  54,  50,  47,  43
+   0,  61,  50,  63,   4, 125, 106, 105,  24,  36,
+   0,  98,  97,  45,  28,  96,   3,  95,  93,  87,
+  82,  81,  72,  54
 };
-short	yyr1[] =
+static	const	short	yyr1[] =
 {
    0,  17,  17,   1,   1,   4,   4,   5,   5,   6,
    6,   3,   2,   7,   8,   8,   9,   9,  10,  10,
@@ -126,7 +125,7 @@ short	yyr1[] =
   15,  15,  15,  15,  15,  15,  15,  15,  15,  15,
   16,  16
 };
-short	yyr2[] =
+static	const	short	yyr2[] =
 {
    0,   0,   2,   1,   2,   1,   2,   2,   2,   1,
    2,   3,   3,   3,   0,   2,   2,   1,   0,   2,
@@ -137,22 +136,22 @@ short	yyr2[] =
    1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
    0,   2
 };
-short	yychk[] =
+static	const	short	yychk[] =
 {
 -1000, -17,  -1, -10,  -5,  -3,   7,   4,   6,  12,
- -11,   9,  -9,  -7,  10,  11,  13,  38, -12,  15,
-  16, -14,  32,  34,  33,  14,  42,  40,  35,  36,
-  37,  29,  30,  17,  19,  -1,  -8,  -9,  15,  -2,
-   8,  40,  40,  -2, -13, -15, -14,   4,   5,   6,
+ -11,   9,  -9,  -7,  10,  11,  13,  39, -12,  15,
+  16, -14,  33,  35,  34,  14,  43,  41,  36,  37,
+  38,  30,  31,  17,  19,  -1,  -8,  -9,  15,  -2,
+   8,  41,  41,  -2, -13, -15, -14,   4,   5,   6,
    7,   8,   9,  10,  11,  12,  13,  15, -13,  -9,
  -13, -10, -10, -10, -10, -16,  -4, -10,  -6,  -5,
-  41,  31, -13,  -3, -13, -13, -13,  -3, -16, -10,
+  42,  32, -13,  -3, -13, -13, -13,  -3, -16, -10,
  -10, -10, -10,  -8, -18, -19,  -4, -13, -22, -23,
-  31, -16,  -3, -13,  39,  35,  -4, -13, -13,  20,
-  28,  18, -10, -10,  28,   5,  28, -10,  -3, -13,
- -16, -10, -16, -21,  28,  28, -10, -20, -10
+  32, -16,  -3, -13,  40,  36,  -4, -13, -13,  20,
+  29,  18, -10, -10,  29,   5,  29, -10,  -3, -13,
+ -16, -10, -16, -21,  29,  29, -10, -20, -10
 };
-short	yydef[] =
+static	const	short	yydef[] =
 {
   -2,  -2,   0,   3,  18,  14,   0,   0,   0,   0,
   32,   0,  18,  18,  18,  18,  70,  18,  44,   0,
@@ -167,33 +166,36 @@ short	yydef[] =
   58,  18,  21,  23,  12,  70,  26,  29,  31,  51,
    0,  37,   0,  18,  53,  24,  27,  18,  25
 };
-short	yytok1[] =
+static	const	short	yytok1[] =
 {
    1,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-  35,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+  36,   0,   0,   0,   0,   0,   0,   0,   0,   0,
    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-   0,   0,   0,   0,  34,   0,  32,   0,  37,   0,
-  40,  28,   0,   0,   0,   0,   0,   0,   0,   0,
-   0,   0,   0,   0,   0,   0,   0,   0,   0,  36,
-   0,  41,   0,   0,   0,   0,   0,   0,   0,   0,
-   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-   0,   0,   0,   0,  31,   0,  42,   0,   0,   0,
+   0,   0,   0,   0,  35,   0,  33,   0,  38,   0,
+  41,  29,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,  37,
+   0,  42,   0,   0,   0,   0,   0,   0,   0,   0,
    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-   0,   0,   0,  38,   0,  39
+   0,   0,   0,   0,  32,   0,  43,   0,   0,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+   0,   0,   0,  39,   0,  40
 };
-short	yytok2[] =
+static	const	short	yytok2[] =
 {
    2,   3,   4,   5,   6,   7,   8,   9,  10,  11,
   12,  13,  14,  15,  16,  17,  18,  19,  20,  21,
-  22,  23,  24,  25,  26,  27,  29,  30,  33
+  22,  23,  24,  25,  26,  27,  28,  30,  31,  34
 };
-long	yytok3[] =
+static	const	long	yytok3[] =
 {
    0
 };
 #define YYFLAG 		-1000
+#define YYERROR		goto yyerrlab
+#define YYACCEPT	return(0)
+#define YYABORT		return(1)
 #define	yyclearin	yychar = -1
 #define	yyerrok		yyerrflag = 0
 
@@ -201,22 +203,28 @@ long	yytok3[] =
 #include	"y.debug"
 #else
 #define	yydebug		0
-char*	yytoknames[1];		/* for debugging */
-char*	yystates[1];		/* for debugging */
+static	const	char*	yytoknames[1];		/* for debugging */
+static	const	char*	yystates[1];		/* for debugging */
 #endif
 
 /*	parser for yacc output	*/
-
+#ifdef YYARG
+#define	yynerrs		yyarg->yynerrs
+#define	yyerrflag	yyarg->yyerrflag
+#define yyval		yyarg->yyval
+#define yylval		yyarg->yylval
+#else
 int	yynerrs = 0;		/* number of errors */
 int	yyerrflag = 0;		/* error recovery flag */
+#endif
 
 extern	int	fprint(int, char*, ...);
 extern	int	sprint(char*, char*, ...);
 
-char*
+static const char*
 yytokname(int yyc)
 {
-	static char x[16];
+	static char x[10];
 
 	if(yyc > 0 && yyc <= sizeof(yytoknames)/sizeof(yytoknames[0]))
 	if(yytoknames[yyc-1])
@@ -225,10 +233,10 @@ yytokname(int yyc)
 	return x;
 }
 
-char*
+static const char*
 yystatname(int yys)
 {
-	static char x[16];
+	static char x[10];
 
 	if(yys >= 0 && yys < sizeof(yystates)/sizeof(yystates[0]))
 	if(yystates[yys])
@@ -237,14 +245,22 @@ yystatname(int yys)
 	return x;
 }
 
-long
+static long
+#ifdef YYARG
+yylex1(struct Yyarg *yyarg)
+#else
 yylex1(void)
+#endif
 {
 	long yychar;
-	long *t3p;
+	const long *t3p;
 	int c;
 
+#ifdef YYARG	
+	yychar = yylex(yyarg);
+#else
 	yychar = yylex();
+#endif
 	if(yychar <= 0) {
 		c = yytok1[0];
 		goto out;
@@ -278,16 +294,21 @@ out:
 }
 
 int
+#ifdef YYARG
+yyparse(struct Yyarg *yyarg)
+#else
 yyparse(void)
+#endif
 {
 	struct
 	{
 		YYSTYPE	yyv;
 		int	yys;
 	} yys[YYMAXDEPTH], *yyp, *yypt;
-	short *yyxi;
+	const short *yyxi;
 	int yyj, yym, yystate, yyn, yyg;
 	long yychar;
+#ifndef YYARG
 	YYSTYPE save1, save2;
 	int save3, save4;
 
@@ -295,6 +316,7 @@ yyparse(void)
 	save2 = yyval;
 	save3 = yynerrs;
 	save4 = yyerrflag;
+#endif
 
 	yystate = 0;
 	yychar = -1;
@@ -312,10 +334,12 @@ ret1:
 	goto ret;
 
 ret:
+#ifndef YYARG
 	yylval = save1;
 	yyval = save2;
 	yynerrs = save3;
 	yyerrflag = save4;
+#endif
 	return yyn;
 
 yystack:
@@ -336,7 +360,11 @@ yynewstate:
 	if(yyn <= YYFLAG)
 		goto yydefault; /* simple state */
 	if(yychar < 0)
+#ifdef YYARG
+		yychar = yylex1(yyarg);
+#else
 		yychar = yylex1();
+#endif
 	yyn += yychar;
 	if(yyn < 0 || yyn >= YYLAST)
 		goto yydefault;
@@ -355,7 +383,11 @@ yydefault:
 	yyn = yydef[yystate];
 	if(yyn == -2) {
 		if(yychar < 0)
-			yychar = yylex1();
+#ifdef YYARG
+		yychar = yylex1(yyarg);
+#else
+		yychar = yylex1();
+#endif
 
 		/* look through exception table */
 		for(yyxi=yyexca;; yyxi+=2)
@@ -375,11 +407,13 @@ yydefault:
 		switch(yyerrflag) {
 		case 0:   /* brand new error */
 			yyerror("syntax error");
-			yynerrs++;
 			if(yydebug >= 1) {
 				fprint(2, "%s", yystatname(yystate));
 				fprint(2, "saw %s\n", yytokname(yychar));
 			}
+			goto yyerrlab;
+		yyerrlab:
+			yynerrs++;
 
 		case 1:
 		case 2: /* incompletely recovered error ... try again */
@@ -432,157 +466,157 @@ yydefault:
 	switch(yym) {
 		
 case 1:
-#line	24	"/usr/npe/src/cmd/push/syn.y"
+#line	24	"/usr/local/plan9/src/cmd/push/syn.y"
 { return 1;} break;
 case 2:
-#line	25	"/usr/npe/src/cmd/push/syn.y"
+#line	25	"/usr/local/plan9/src/cmd/push/syn.y"
 {return !compile(yypt[-1].yyv.tree);} break;
 case 4:
-#line	27	"/usr/npe/src/cmd/push/syn.y"
+#line	27	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=tree2(';', yypt[-1].yyv.tree, yypt[-0].yyv.tree);} break;
 case 6:
-#line	29	"/usr/npe/src/cmd/push/syn.y"
+#line	29	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=tree2(';', yypt[-1].yyv.tree, yypt[-0].yyv.tree);} break;
 case 8:
-#line	31	"/usr/npe/src/cmd/push/syn.y"
+#line	31	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=tree1('&', yypt[-1].yyv.tree);} break;
 case 11:
-#line	34	"/usr/npe/src/cmd/push/syn.y"
+#line	34	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=tree1(BRACE, yypt[-1].yyv.tree);} break;
 case 12:
-#line	35	"/usr/npe/src/cmd/push/syn.y"
+#line	35	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=tree1(PCMD, yypt[-1].yyv.tree);} break;
 case 13:
-#line	36	"/usr/npe/src/cmd/push/syn.y"
+#line	36	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=tree2('=', yypt[-2].yyv.tree, yypt[-0].yyv.tree);} break;
 case 14:
-#line	37	"/usr/npe/src/cmd/push/syn.y"
+#line	37	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=0;} break;
 case 15:
-#line	38	"/usr/npe/src/cmd/push/syn.y"
+#line	38	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=mung2(yypt[-1].yyv.tree, yypt[-1].yyv.tree->child[0], yypt[-0].yyv.tree);} break;
 case 16:
-#line	39	"/usr/npe/src/cmd/push/syn.y"
+#line	39	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=mung1(yypt[-1].yyv.tree, yypt[-1].yyv.tree->rtype==HERE?heredoc(yypt[-0].yyv.tree):yypt[-0].yyv.tree);} break;
 case 18:
-#line	41	"/usr/npe/src/cmd/push/syn.y"
+#line	41	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=0;} break;
 case 19:
-#line	42	"/usr/npe/src/cmd/push/syn.y"
+#line	42	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=epimung(yypt[-1].yyv.tree, yypt[-0].yyv.tree);} break;
 case 20:
-#line	43	"/usr/npe/src/cmd/push/syn.y"
+#line	43	"/usr/local/plan9/src/cmd/push/syn.y"
 {skipnl();} break;
 case 21:
-#line	44	"/usr/npe/src/cmd/push/syn.y"
+#line	44	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=mung2(yypt[-3].yyv.tree, yypt[-2].yyv.tree, yypt[-0].yyv.tree);} break;
 case 22:
-#line	45	"/usr/npe/src/cmd/push/syn.y"
+#line	45	"/usr/local/plan9/src/cmd/push/syn.y"
 {skipnl();} break;
 case 23:
-#line	45	"/usr/npe/src/cmd/push/syn.y"
+#line	45	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=mung1(yypt[-2].yyv.tree, yypt[-0].yyv.tree);} break;
 case 24:
-#line	46	"/usr/npe/src/cmd/push/syn.y"
+#line	46	"/usr/local/plan9/src/cmd/push/syn.y"
 {skipnl();} break;
 case 25:
-#line	55	"/usr/npe/src/cmd/push/syn.y"
+#line	55	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=mung3(yypt[-7].yyv.tree, yypt[-5].yyv.tree, yypt[-3].yyv.tree ? yypt[-3].yyv.tree : tree1(PAREN, yypt[-3].yyv.tree), yypt[-0].yyv.tree);} break;
 case 26:
-#line	56	"/usr/npe/src/cmd/push/syn.y"
+#line	56	"/usr/local/plan9/src/cmd/push/syn.y"
 {skipnl();} break;
 case 27:
-#line	57	"/usr/npe/src/cmd/push/syn.y"
+#line	57	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=mung3(yypt[-5].yyv.tree, yypt[-3].yyv.tree, (struct tree *)0, yypt[-0].yyv.tree);} break;
 case 28:
-#line	58	"/usr/npe/src/cmd/push/syn.y"
+#line	58	"/usr/local/plan9/src/cmd/push/syn.y"
 {skipnl();} break;
 case 29:
-#line	59	"/usr/npe/src/cmd/push/syn.y"
+#line	59	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=mung2(yypt[-3].yyv.tree, yypt[-2].yyv.tree, yypt[-0].yyv.tree);} break;
 case 30:
-#line	60	"/usr/npe/src/cmd/push/syn.y"
+#line	60	"/usr/local/plan9/src/cmd/push/syn.y"
 {skipnl();} break;
 case 31:
-#line	61	"/usr/npe/src/cmd/push/syn.y"
+#line	61	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=tree2(SWITCH, yypt[-2].yyv.tree, yypt[-0].yyv.tree);} break;
 case 32:
-#line	62	"/usr/npe/src/cmd/push/syn.y"
+#line	62	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=simplemung(yypt[-0].yyv.tree);} break;
 case 33:
-#line	63	"/usr/npe/src/cmd/push/syn.y"
+#line	63	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=mung2(yypt[-2].yyv.tree, yypt[-1].yyv.tree, yypt[-0].yyv.tree);} break;
 case 34:
-#line	64	"/usr/npe/src/cmd/push/syn.y"
+#line	64	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=tree2(ANDAND, yypt[-2].yyv.tree, yypt[-0].yyv.tree);} break;
 case 35:
-#line	65	"/usr/npe/src/cmd/push/syn.y"
+#line	65	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=tree2(OROR, yypt[-2].yyv.tree, yypt[-0].yyv.tree);} break;
 case 36:
-#line	66	"/usr/npe/src/cmd/push/syn.y"
+#line	66	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=mung2(yypt[-1].yyv.tree, yypt[-2].yyv.tree, yypt[-0].yyv.tree);} break;
 case 37:
-#line	67	"/usr/npe/src/cmd/push/syn.y"
+#line	67	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=mung3mp(yypt[-3].yyv.tree, yypt[-4].yyv.tree, yypt[-2].yyv.tree, yypt[-0].yyv.tree);} break;
 case 38:
-#line	68	"/usr/npe/src/cmd/push/syn.y"
+#line	68	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=mung2(yypt[-1].yyv.tree, yypt[-1].yyv.tree->child[0], yypt[-0].yyv.tree);} break;
 case 39:
-#line	69	"/usr/npe/src/cmd/push/syn.y"
+#line	69	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=mung3(yypt[-1].yyv.tree, yypt[-1].yyv.tree->child[0], yypt[-1].yyv.tree->child[1], yypt[-0].yyv.tree);} break;
 case 40:
-#line	70	"/usr/npe/src/cmd/push/syn.y"
+#line	70	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=mung1(yypt[-1].yyv.tree, yypt[-0].yyv.tree);} break;
 case 41:
-#line	71	"/usr/npe/src/cmd/push/syn.y"
+#line	71	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=mung1(yypt[-1].yyv.tree, yypt[-0].yyv.tree);} break;
 case 42:
-#line	72	"/usr/npe/src/cmd/push/syn.y"
+#line	72	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=tree2(FN, yypt[-1].yyv.tree, yypt[-0].yyv.tree);} break;
 case 43:
-#line	73	"/usr/npe/src/cmd/push/syn.y"
+#line	73	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=tree1(FN, yypt[-0].yyv.tree);} break;
 case 45:
-#line	75	"/usr/npe/src/cmd/push/syn.y"
+#line	75	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=tree2(ARGLIST, yypt[-1].yyv.tree, yypt[-0].yyv.tree);} break;
 case 46:
-#line	76	"/usr/npe/src/cmd/push/syn.y"
+#line	76	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=tree2(ARGLIST, yypt[-1].yyv.tree, yypt[-0].yyv.tree);} break;
 case 48:
-#line	78	"/usr/npe/src/cmd/push/syn.y"
+#line	78	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=tree2('^', yypt[-2].yyv.tree, yypt[-0].yyv.tree);} break;
 case 49:
-#line	79	"/usr/npe/src/cmd/push/syn.y"
+#line	79	"/usr/local/plan9/src/cmd/push/syn.y"
 {lastword=1; yypt[-0].yyv.tree->type=WORD;} break;
 case 51:
-#line	81	"/usr/npe/src/cmd/push/syn.y"
+#line	81	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=tree2('^', yypt[-2].yyv.tree, yypt[-0].yyv.tree);} break;
 case 52:
-#line	82	"/usr/npe/src/cmd/push/syn.y"
+#line	82	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=tree1('$', yypt[-0].yyv.tree);} break;
 case 53:
-#line	83	"/usr/npe/src/cmd/push/syn.y"
+#line	83	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=tree2(SUB, yypt[-3].yyv.tree, yypt[-1].yyv.tree);} break;
 case 54:
-#line	84	"/usr/npe/src/cmd/push/syn.y"
+#line	84	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=tree1('"', yypt[-0].yyv.tree);} break;
 case 55:
-#line	85	"/usr/npe/src/cmd/push/syn.y"
+#line	85	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=tree1(COUNT, yypt[-0].yyv.tree);} break;
 case 57:
-#line	87	"/usr/npe/src/cmd/push/syn.y"
+#line	87	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=tree1('`', yypt[-0].yyv.tree);} break;
 case 58:
-#line	88	"/usr/npe/src/cmd/push/syn.y"
+#line	88	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=tree1(PAREN, yypt[-1].yyv.tree);} break;
 case 59:
-#line	89	"/usr/npe/src/cmd/push/syn.y"
+#line	89	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=mung1(yypt[-1].yyv.tree, yypt[-0].yyv.tree); yyval.tree->type=PIPEFD;} break;
 case 70:
-#line	91	"/usr/npe/src/cmd/push/syn.y"
+#line	91	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=(struct tree*)0;} break;
 case 71:
-#line	92	"/usr/npe/src/cmd/push/syn.y"
+#line	92	"/usr/local/plan9/src/cmd/push/syn.y"
 {yyval.tree=tree2(WORDS, yypt[-1].yyv.tree, yypt[-0].yyv.tree);} break;
 	}
 	goto yystack;  /* stack new state and value */

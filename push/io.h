@@ -1,5 +1,5 @@
 #define	EOF	(-1)
-#define	NBUF	512
+#define	NBUF	16384
 
 struct io{
 	int	fd;
@@ -25,3 +25,6 @@ void pcmd(io*, tree*);
 void pval(io*, word*);
 void pfnc(io*, thread*);
 void pfmt(io*, char*, ...);
+
+// for figuring out the tree structure
+void tree2dot(io*, tree*);

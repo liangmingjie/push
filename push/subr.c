@@ -3,19 +3,19 @@
 #include "io.h"
 #include "fns.h"
 
-void *
+char*
 emalloc(long n)
 {
-	void *p = Malloc(n);
-
+	char *p = (char *)Malloc(n);
 	if(p==0)
 		panic("Can't malloc %d bytes", n);
 /*	if(err){ pfmt(err, "malloc %d->%p\n", n, p); flush(err); } /**/
+	memset(p, 0, n);
 	return p;
 }
 
 void
-efree(void *p)
+efree(char *p)
 {
 /*	pfmt(err, "free %p\n", p); flush(err); /**/
 	if(p)

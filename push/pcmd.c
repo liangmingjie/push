@@ -163,3 +163,104 @@ pcmd(io *f, tree *t)
 		break;		
 	}
 }
+
+
+char*
+labelname(tree *t)
+{
+	if(t==0)
+		return "";
+	switch(t->type){
+	default:	return "bad val";
+	case '$':	return "$";
+	case '"':	return "\"";
+	case '&':	return "&";
+	case '^':	return "^";
+	case '`':	return "`";
+	case ANDAND: return "&&";
+	case BANG:	return "!";
+	case BRACE:	return "{}";
+	case COUNT:	return "#";
+	case FN:		return "fn";
+	case IF:		return "if";
+	case NOT:		return "if not";
+	case OROR:	return "||";
+	case PCMD:
+	case PAREN:	return "()";
+	case SUB:		return "$()";
+	case SIMPLE:	return "cmd";
+	case SUBSHELL:	return "@";
+	case SWITCH:	return "switch";
+	case TWIDDLE:	return "~";
+	case WHILE:	return "while";
+	case ARGLIST:
+			return "arglist";
+	case ';':
+			return ";";
+	case WORDS:	return "words";
+	case FOR:		return "for";
+	case WORD:	return t->str;
+	case DUP:		return "dup";
+	case PIPEFD:
+	case REDIR:
+		switch(t->rtype){
+		case HERE:
+			return "<<!";
+		case READ:
+		case RDWR:
+			return "<";
+		case APPEND:
+			return ">>";
+		case WRITE:
+			return ">";
+		}
+	case '=':		return "=";
+	case PIPE:		return "|";
+	case FANIN:	return ">|";
+		
+	case FANOUT:	return "|<";	
+	}
+}
+
+char c = 'a';
+int n;
+
+char*
+newnode(void)
+{
+	if(c == 'z'){
+		c = 'a';
+		n++;
+	}
+	return smprint("%c%d", c++, n);	
+}
+
+
+void
+leaf2node(io *f, tree *t, char *p)
+{
+	char *n, *l;
+	if(t == nil)
+		return;
+	l = labelname(t);
+	n = newnode();
+	fprint(2, "\t%s [label=\"%s\"]\n", n, l);
+	if(p != nil)
+		fprint(2, "\t%s->%s\n", p, n);
+	leaf2node(f, c0, n);
+	leaf2node(f, c1, n);
+	leaf2node(f, c2, n);
+	free(n);
+}
+
+// XXX: fix this to work with rc's io system
+void
+tree2dot(io *f, tree *t)
+{
+	fprint(2, "digraph rc {\n");
+	leaf2node(f, t, nil);
+	fprint(2, "}\n");	
+}
+
+
+

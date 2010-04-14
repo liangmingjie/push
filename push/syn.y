@@ -1,6 +1,6 @@
 %term FOR IN WHILE IF NOT TWIDDLE BANG SUBSHELL SWITCH FN
 %term WORD REDIR DUP PIPE FANIN FANOUT SUB
-%term SIMPLE ARGLIST WORDS BRACE PAREN PCMD PIPEFD /* not used in syntax */
+%term SIMPLE FILTER ARGLIST WORDS BRACE PAREN PCMD PIPEFD /* not used in syntax */
 /* operator priorities -- lowest first */
 %left IF WHILE FOR SWITCH ')' NOT
 %left ANDAND OROR

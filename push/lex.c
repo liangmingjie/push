@@ -274,6 +274,7 @@ yylex(void)
 			}
 			else t->rtype = WRITE;
 			t->fd0 = 1;
+			t->fd1 = 0;
 			break;
 		case '<':
 			t->type = REDIR;
@@ -284,7 +285,8 @@ yylex(void)
 				t->rtype = RDWR;
 				*w++=c;
 			} else t->rtype = READ;
-			t->fd0 = 0;
+			t->fd0 = 1;
+			t->fd1 = 0;
 			break;
 		}
 		if(nextis('[')){

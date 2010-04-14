@@ -57,17 +57,33 @@ struct{
 void
 pfnc(io *fd, thread *t)
 {
+	char s[512];
+	int n = 0;
 	int i;
 	void (*fn)(void) = t->code[t->pc].f;
 	list *a;
-	pfmt(fd, "pid %d cycle %p %d ", getpid(), t->code, t->pc);
+	word *b;
+	n += snprint(s, 512, "pid %d cycle %p %d ", getpid(), t->code, t->pc);
+	
+	//pfmt(fd, "pid %d cycle %p %d ", getpid(), t->code, t->pc);
 	for(i = 0;fname[i].f;i++) if(fname[i].f==fn){
-		pstr(fd, fname[i].name);
+		n += snprint(s+n, 512-n, "%s ", fname[i].name);
+		//pstr(fd, fname[i].name);
 		break;
 	}
 	if(!fname[i].f)
-		pfmt(fd, "%p", fn);
-	for(a = t->argv;a;a = a->next) pfmt(fd, " (%v)", a->words);
-	pchr(fd, '\n');
+		n += snprint(s+n, 512-n, "%p ", fn);
+		//pfmt(fd, "%p", fn);
+	for(a = t->argv;a;a = a->next){
+		n += snprint(s+n, 512-n, "(");
+		for(b = a->words; b; b = b->next){
+			n += snprint(s+n, 512-n, "%s ", b->word);
+		}
+		n += snprint(s+n, 512-n, ") ");
+	}
+//	for(a = t->argv;a;a = a->next) pfmt(fd, " (%v)", a->words);
+	n += snprint(s+n, 512-n, "\n");
+	pstr(fd, s);
+//	pchr(fd, '\n');
 	flush(fd);
 }

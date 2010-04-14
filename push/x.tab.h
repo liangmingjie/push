@@ -16,15 +16,16 @@
 #define	FANOUT	57361
 #define	SUB	57362
 #define	SIMPLE	57363
-#define	ARGLIST	57364
-#define	WORDS	57365
-#define	BRACE	57366
-#define	PAREN	57367
-#define	PCMD	57368
-#define	PIPEFD	57369
-#define	ANDAND	57370
-#define	OROR	57371
-#define	COUNT	57372
+#define	FILTER	57364
+#define	ARGLIST	57365
+#define	WORDS	57366
+#define	BRACE	57367
+#define	PAREN	57368
+#define	PCMD	57369
+#define	PIPEFD	57370
+#define	ANDAND	57371
+#define	OROR	57372
+#define	COUNT	57373
 
 typedef union {
 	struct tree *tree;

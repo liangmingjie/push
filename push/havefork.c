@@ -5,6 +5,8 @@
 #include "fns.h"
 
 int havefork = 1;
+int pids[8192];
+int pidp = 0;
 int pipep = 0;
 extern int npipe;
 
@@ -15,7 +17,7 @@ popmp(void)
 {
 	if(pipep==0)
 		return nil;
-	return mpstk[pipep--];
+	return mpstk[--pipep];
 }
 
 int
@@ -94,103 +96,170 @@ Xpipe(void)
 	}
 }
 
-
 void
-Xfanout(void)
+Xfanin(void)
 {
+	int i, j;
+	char s[40];
 	struct thread *p = runq;
 	int pc = p->pc, forkid;
 	int lfd = p->code[pc++].i;
 	int nfd = p->code[pc++].i;
 	int pfd[2];
-	int i;
+	
+	static int ntimes;
+	nfd = 3; // XXX: to test
 	pipes *m = emalloc(sizeof(pipes)+nfd * sizeof(int) * 2);
 	m->npipe = nfd;
-	pushmp(m);
-	
 	for(i = 0; i < m->npipe; i++)
-		if(pipe(m->fd[i])<0){
-			Xerror("can't get pipe");
-			return;
-		}
-	
-	/* fork the filter
-		then filter the rest of the machines. 
-		you actually do get a reasonable amount of stuff automatically on a multicore. 
-		this actually gets added in *code*
-	
-	
-	The filter is already on the stack here. 
-	and I can break all of this up anyway. 
-	
-	*/
-	
-	/*
-
-	// this has us ready for the filter. 
-	// which will consume. 
-	// then what is the next stage? 
-	// you need to go after the filter. 
-	// and connect all the filter's junk. 
-	// need to make the stack. 
-	
-	// now it filters. once it filters I need to connect the filter fds to the other. 
-	// which is essentially a pipe operation. 
-	// which means that it gets outputted at the code rather than the exec level. 
-	
-	*/
+		for(j = 0; j < 2; j++)
+			if(pipe(m->fd[i][j])<0){
+				Xerror("can't get pipe");
+				return;
+			}	
+	pushmp(m);
+	if(pipe(pfd)<0){
+		Xerror("can't get pipe");
+		return;
+	}
+	// IRF
 	switch(forkid = fork()){
 	case -1:
 		Xerror("try again");
 		break;
 	case 0:
 		clearwaitpids();
-		start(p->code, pc+2, runq->local);
+		pushlist();
+		for(i = 0; i < m->npipe; i++){
+			close(m->fd[i][1][PWR]);
+			close(m->fd[i][0][PRD]);
+			close(m->fd[i][0][PWR]);
+			pushword(smprint("%d", m->fd[i][1][PRD]));
+		}
+		startargv(p->code, pc+3, runq->local, runq->argv);
 		runq->ret = 0;
 		close(pfd[PRD]);
-		pushredir(ROPEN, pfd[PWR], lfd);
-		break;
+		close(0); // irf doesn't need a stdin. 
+		pushredir(ROPEN, pfd[PWR], 1);
+		return;
 	default:
 		addwaitpid(forkid);
-		for(i = 0; i < nfd; i++)
-			pushword(smprint("%d", m->fd[i][0]));
-		start(p->code, p->code[pc].i, runq->local);
-		close(pfd[PWR]);
-		p->pc = p->code[pc+1].i;
-		p->pid = forkid;
 		break;
 	}
+	switch(forkid = fork()){
+	case -1:
+		Xerror("try again");
+		break;
+	case 0:
+		clearwaitpids();
+		start(p->code, p->code[pc+1].i, runq->local);
+		for(i = 0; i < m->npipe; i++){
+			for(j = 0; j < 2; j++){
+				close(m->fd[i][j][PRD]);
+				close(m->fd[i][j][PWR]);
+			}
+		} 
+		close(pfd[PWR]);
+		pushredir(ROPEN, pfd[PRD], 0);
+	
+		runq->ret = 0;
+		return;
+	default:
+		addwaitpid(forkid);
+		break;	
+	}
+
+	start(p->code, p->code[pc].i, runq->local);
+	close(pfd[PWR]);
+	close(pfd[PRD]);
+
+	p->pc = p->code[pc+1].i;
 }
 
 void
-Xfanin(void)
+Xfanout(void)
 {
-	int i;
+	int i, j, k;
+	char s[40];
 	struct thread *p = runq;
-	int pc = p->pc, forkid = -1;
+	int pc = p->pc, forkid;
 	int lfd = p->code[pc++].i;
-	pc++; /* skip the other fd, but keep it around for compatibility */
+	int rfd = p->code[pc++].i;
+	int pfd[2];
 	pipes *m = popmp();
-	for(i = 0; m->npipe; i++)
-		switch(forkid = fork()){
-		case -1:
-			Xerror("try again");
-			break;
-		case 0:
-			clearwaitpids();
-			start(p->code, pc+2, runq->local);
-			runq->ret = 0;
-			close(m->fd[i][PRD]);
-			pushredir(ROPEN, m->fd[i][PWR], lfd);
-			return;
+
+	if(m == nil)
+		Xerror("no multipipes on stack");	
+	if(pipe(pfd)<0){
+		Xerror("can't get pipe");
+		return;
+	}
+	// ORF
+	switch(forkid = fork()){
+	case -1:
+		Xerror("try again");
+		break;
+	case 0:
+		clearwaitpids();
+		pushlist();
+		for(i = 0; i < m->npipe; i++){
+			pushword(smprint("%d", m->fd[i][0][PWR]));
 		}
-	for(i = 0; i < m->npipe; i++)
-		pushword(smprint("%d", m->fd[i][PRD]));
-	addwaitpid(forkid);
+		startargv(p->code, pc+3, runq->local, runq->argv);
+		runq->ret = 0;
+		for(i = 0; i < m->npipe; i++){
+			close(m->fd[i][1][PRD]);
+			close(m->fd[i][1][PWR]);
+			close(m->fd[i][0][PRD]); 
+		} 		
+		close(pfd[PWR]);
+		close(1); // orf doesn't need a stdout.
+		pushredir(ROPEN, pfd[PRD], 0);
+		return;
+	default:
+		addwaitpid(forkid);
+		break;
+	}
+	for(i = 0; i < m->npipe; i++) switch(forkid = fork()){
+	case -1:
+		Xerror("try again");
+		break;
+	case 0:
+		clearwaitpids();
+		start(p->code, p->code[pc+1].i, runq->local);
+		runq->ret = 0;
+		close(pfd[PRD]);
+		close(pfd[PWR]);
+		for(j = 0; j < m->npipe; j++){
+			if(j == i)
+				continue;
+			for(k = 0; k < 2; k++){
+				close(m->fd[j][k][PWR]);
+				close(m->fd[j][k][PRD]);
+			}
+		}
+		close(m->fd[i][0][PWR]);
+		close(m->fd[i][1][PRD]);
+		pushredir(ROPEN, m->fd[i][0][PRD], 0);
+		pushredir(ROPEN, m->fd[i][1][PWR], 1);
+		return;
+	default:
+		addwaitpid(forkid);
+		break;	
+	}	
 	start(p->code, p->code[pc].i, runq->local);
+	for(i = 0; i < m->npipe; i++){
+		for(j = 0; j < 2; j++){
+			close(m->fd[i][j][PRD]);
+			close(m->fd[i][j][PWR]);
+		}
+	} 
+	close(pfd[PRD]); 
+	pushredir(ROPEN, pfd[PWR], 1);
 	p->pc = p->code[pc+1].i;
 	p->pid = forkid;
 }
+
 enum { Wordmax = 8192, };
 
 /*

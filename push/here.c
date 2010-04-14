@@ -6,8 +6,7 @@ struct here *here, **ehere;
 int ser = 0;
 char tmp[]="/tmp/here0000.0000";
 char hex[]="0123456789abcdef";
-
-void psubst(io*, uchar*);
+void psubst(io*, char*);
 void pstrs(io*, word*);
 
 void
@@ -65,9 +64,8 @@ readhere(void)
 				*s='\0';
 				if(tag && strcmp(line, tag)==0) break;
 				if(subst)
-					psubst(f, (uchar *)line);
-				else
-					pstr(f, line);
+					psubst(f, line);
+				else pstr(f, line);
 				s = line;
 				if(c=='\n'){
 					pprompt();
@@ -88,19 +86,19 @@ readhere(void)
 }
 
 void
-psubst(io *f, uchar *s)
+psubst(io *f, char *s)
 {
+	char *t, *u;
 	int savec, n;
-	uchar *t, *u;
 	word *star;
 	while(*s){
 		if(*s!='$'){
-			if(0xa0 <= *s && *s <= 0xf5){
+			if(0xa0<=(*s&0xff) && (*s&0xff)<=0xf5){
 				pchr(f, *s++);
 				if(*s=='\0')
 					break;
 			}
-			else if(0xf6 <= *s && *s <= 0xf7){
+			else if(0xf6<=(*s&0xff) && (*s&0xff)<=0xf7){
 				pchr(f, *s++);
 				if(*s=='\0')
 					break;
@@ -128,7 +126,7 @@ psubst(io *f, uchar *s)
 					}
 				}
 				else
-					pstrs(f, vlook((char *)s)->val);
+					pstrs(f, vlook(s)->val);
 				*t = savec;
 				if(savec=='^')
 					t++;

@@ -46,6 +46,9 @@ int
 compile(tree *t)
 {
 	ncode = 100;
+	
+	if(flag['t'])
+		tree2dot(err, t);
 	codebuf = (code *)emalloc(ncode*sizeof codebuf[0]);
 	codep = 0;
 	/* XXX: This is bad, it's used in exec but I'm setting it up here
@@ -53,7 +56,8 @@ compile(tree *t)
 	  * is there a better way?
 	  */
 	npipe = 10;
-	mpstk = (pipes **)emalloc(npipe*sizeof(pipes*));
+	mpstk = (pipes **)emalloc(npipe*sizeof mpstk[0]);
+
 	pipep = 0;
 
 	emiti(0);			/* reference count */
@@ -66,6 +70,7 @@ compile(tree *t)
 	readhere();
 	emitf(Xreturn);
 	emitf(0);
+	
 	return 1;
 }
 
@@ -80,11 +85,10 @@ char*
 fnstr(tree *t)
 {
 	io *f = openstr();
-	void *v;
+	char *v;
 	extern char nl;
 	char svnl = nl;
-
-	nl = ';';
+	nl=';';
 	pfmt(f, "%t", t);
 	nl = svnl;
 	v = f->strp;
@@ -96,8 +100,10 @@ fnstr(tree *t)
 void
 outcode(tree *t, int eflag)
 {
-	int p, q;
+	int p, q, r;
 	tree *tt;
+	int i;
+
 	if(t==0)
 		return;
 	if(t->type!=NOT && t->type!=';')
@@ -219,6 +225,14 @@ outcode(tree *t, int eflag)
 	case PAREN:
 		outcode(c0, eflag);
 		break;
+	case FILTER:
+		// filters can't mark the stack because their argv is created programmatically.
+		emitf(Xmark);
+		outcode(c0, eflag);
+		emitf(Xsimple);
+		if(eflag)
+			emitf(Xeflag);
+		break;	
 	case SIMPLE:
 		emitf(Xmark);
 		outcode(c0, eflag);
@@ -345,7 +359,7 @@ outcode(tree *t, int eflag)
 	case '=':
 		tt = t;
 		for(;t && t->type=='=';t = c2);
-		if(t){					/* var=value cmd */
+		if(t){
 			for(t = tt;t->type=='=';t = c2){
 				emitf(Xmark);
 				outcode(c1, eflag);
@@ -353,17 +367,17 @@ outcode(tree *t, int eflag)
 				outcode(c0, eflag);
 				emitf(Xlocal);		/* push var for cmd */
 			}
-			outcode(t, eflag);		/* gen. code for cmd */
-			for(t = tt; t->type == '='; t = c2)
-				emitf(Xunlocal);	/* pop var */
+			outcode(t, eflag);
+			for(t = tt; t->type=='='; t = c2)
+				emitf(Xunlocal);
 		}
-		else{					/* var=value */
+		else{
 			for(t = tt;t;t = c2){
 				emitf(Xmark);
 				outcode(c1, eflag);
 				emitf(Xmark);
 				outcode(c0, eflag);
-				emitf(Xassign);	/* set var permanently */
+				emitf(Xassign);
 			}
 		}
 		t = tt;	/* so tests below will work */
@@ -387,6 +401,37 @@ outcode(tree *t, int eflag)
 		stuffdot(q);
 		emitf(Xpipewait);
 		break;
+	case FANIN:
+		emitf(Xfanin);
+		emiti(t->fd0);
+		emiti(t->fd1);
+		if(havefork){
+			p = emiti(0);
+			r = emiti(0);
+			q = emiti(0);
+
+			outcode(c0, eflag);
+			emitf(Xexit);
+			stuffdot(p);
+			outcode(c1, eflag);
+			
+			emitf(Xexit);
+			stuffdot(r);
+
+		} else {
+			emits(fnstr(c0));
+			q = emiti(0);
+		}
+		/* who gets what file descriptor? */
+		/* need to push all the file descriptors onto the stack as well */
+		/* how do you get the fds? */
+		/* I need to get the emitted values */
+	
+		outcode(c2, eflag);
+		emitf(Xreturn);
+		stuffdot(q);
+		emitf(Xpipewait);
+		break;		
 	case FANOUT:
 		emitf(Xfanout);
 		/* XXX: these are not FDs, they're the 
@@ -396,48 +441,24 @@ outcode(tree *t, int eflag)
 		/* create multipipe and push it. */
 		if(havefork){
 			p = emiti(0);
+			r = emiti(0);
 			q = emiti(0);
 			outcode(c0, eflag);
 			emitf(Xexit);
 			stuffdot(p);
-		} else {
-			emits(fnstr(c0));
-			q = emiti(0);
-		}
-		/* who gets what file descriptor? */
-		/* need to push all the file descriptors onto the stack as well */
-		/* how do you get the fds? */
-		/* I need to get the emitted values */
-		outcode(c1, eflag);
-		emitf(Xreturn);
-		stuffdot(q);
-		emitf(Xpipewait);
-		break;
-	case FANIN:
-		emitf(Xfanin);
-		/* XXX: these are not FDs, they're the 
-		  * size of each multipipe */
-		emiti(t->fd0);
-		emiti(t->fd1);
-		if(havefork){
-			p = emiti(0);
-			q = emiti(0);
-			outcode(c0, eflag);
+			outcode(c1, eflag);
 			emitf(Xexit);
-			stuffdot(p);
+			stuffdot(r);
 		} else {
 			emits(fnstr(c0));
 			q = emiti(0);
 		}
-		/* who gets what file descriptor? */
-		/* need to push all the file descriptors onto the stack as well */
-		/* how do you get the fds? */
-		/* I need to get the emitted values */
-		outcode(c1, eflag);
+		outcode(c2, eflag);
 		emitf(Xreturn);
 		stuffdot(q);
 		emitf(Xpipewait);
 		break;
+
 	}
 	if(t->type!=NOT && t->type!=';')
 		runq->iflast = t->type==IF;
@@ -549,3 +570,4 @@ codefree(code *cp)
 	}
 	efree((char *)cp);
 }
+

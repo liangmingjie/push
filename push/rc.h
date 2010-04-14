@@ -10,7 +10,9 @@
 #include <u.h>
 #include <libc.h>
 #include <mpipe.h>
-#include <filt.h>
+#undef NSIG
+#undef SIGINT
+#undef SIGQUIT
 #define	NSIG	32
 #define	SIGINT	2
 #define	SIGQUIT	3
@@ -24,8 +26,14 @@
 #endif
 #define	YYMAXDEPTH	500
 #ifndef PAREN
+#ifndef YYMAJOR
 #include "x.tab.h"
 #endif
+#endif
+
+#undef pipe	/* so that /dev/fd works */
+#define searchpath rcsearchpath	/* avoid new libc function */
+
 typedef struct tree tree;
 typedef struct word word;
 typedef struct io io;
@@ -35,31 +43,26 @@ typedef struct list list;
 typedef struct redir redir;
 typedef struct thread thread;
 typedef struct builtin builtin;
-
-#pragma incomplete word
-#pragma incomplete io
-
 typedef struct pipes pipes;
+
 struct pipes{
 	int npipe;
-	int fd[1][2];
+	int fd[1][2][2];
 };
 
 struct tree{
-	int	type;
-	int	rtype, fd0, fd1;	/* details of REDIR PIPE DUP tokens */
-	char	*str;
-	int	quoted;
-	int	iskw;
-	tree	*child[3];
-	tree	*next;
-	struct pipes *mp;
+	int type;
+	int rtype, fd0, fd1;		/* details of REDIR PIPE DUP tokens */
+	char *str;
+	int quoted;
+	int iskw;
+	tree *child[3];
+	tree *next;
 };
 tree *newtree(void);
 tree *token(char*, int), *klook(char*), *tree1(int, tree*);
 tree *tree2(int, tree*, tree*), *tree3(int, tree*, tree*, tree*);
 tree *mung1(tree*, tree*), *mung2(tree*, tree*, tree*);
-tree *mung3mp(tree*, tree*, tree*, tree*);
 tree *mung3(tree*, tree*, tree*, tree*), *epimung(tree*, tree*);
 tree *simplemung(tree*), *heredoc(tree*);
 void freetree(tree*);
@@ -70,56 +73,45 @@ tree *cmdtree;
  * Always call codefree(.) when deleting a reference.
  */
 union code{
-	void	(*f)(void);
-	int	i;
-	char	*s;
+	void (*f)(void);
+	int i;
+	char *s;
 };
-
 char *promptstr;
 int doprompt;
-
 #define	NTOK	8192
-
 char tok[NTOK];
-
 #define	APPEND	1
 #define	WRITE	2
 #define	READ	3
 #define	HERE	4
 #define	DUPFD	5
 #define	CLOSE	6
-#define RDWR	7
-
+#define	RDWR	7
 struct var{
-	char	*name;		/* ascii name */
-	word	*val;		/* value */
-	int	changed;
-	code	*fn;		/* pointer to function's code vector */
-	int	fnchanged;
-	int	pc;		/* pc of start of function */
-	var	*next;		/* next on hash or local list */
+	char *name;		/* ascii name */
+	word *val;	/* value */
+	int changed;
+	code *fn;		/* pointer to function's code vector */
+	int fnchanged;
+	int pc;			/* pc of start of function */
+	var *next;	/* next on hash or local list */
+	void	(*changefn)(var*);
 };
 var *vlook(char*), *gvlook(char*), *newvar(char*, var*);
-
 #define	NVAR	521
-
 var *gvar[NVAR];				/* hash for globals */
-
 #define	new(type)	((type *)emalloc(sizeof(type)))
-
-void *emalloc(long);
+char *emalloc(long);
 void *Malloc(ulong);
-void efree(void *);
-
+void efree(char*);
 #define	NOFILE	128		/* should come from <param.h> */
-
 struct here{
-	tree	*tag;
-	char	*name;
+	tree *tag;
+	char *name;
 	struct here *next;
 };
 int mypid;
-
 /*
  * Glob character escape in strings:
  *	In a string, GLOB must be followed by *?[ or GLOB.
@@ -136,7 +128,6 @@ int mypid;
 #define	onebyte(c)	((c&0x80)==0x00)
 #define	twobyte(c)	((c&0xe0)==0xc0)
 #define	threebyte(c)	((c&0xf0)==0xe0)
-
 char **argp;
 char **args;
 int nerror;		/* number of errors encountered during compilation */
@@ -149,7 +140,8 @@ int doprompt;		/* is it time for a prompt? */
  */
 #define	PRD	0
 #define	PWR	1
-char Rcmain[], Fdprefix[];
+extern char *Rcmain(), Fdprefix[];
+#define	register
 /*
  * How many dot commands have we executed?
  * Used to ensure that -v flag doesn't print rcmain.
@@ -158,3 +150,4 @@ int ndot;
 char *getstatus(void);
 int lastc;
 int lastword;
+int kidpid;

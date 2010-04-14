@@ -88,19 +88,22 @@ the fd1 for fanouts and the f0 for fanins are implemented together to make sure 
 tree*
 mung3mp(tree *t, tree *c0, tree *c1, tree *c2)
 {
-	t->type = PIPE;
-	t->child[0] = c0;
-	t->child[1] = tree2(FANOUT,
-			tree1(SIMPLE, 
-				tree1('$', token("orf", WORD))),
-			tree2(FANIN,
-				c1,
-				tree2(PIPE, 
-					tree1(SIMPLE, 
-						tree1('$', token("irf", WORD))),
-					c2)));
+	t->type = FANIN;
+	t->child[0] = tree1(SIMPLE, tree1('$', token("irf", WORD)));	
+	t->child[1] = tree3(FANOUT,
+			tree1(SIMPLE, (tree1('$', token("orf", WORD)))),
+			c0,
+			c1); // filled in later);
+			
+	t->child[2] = c2;
+					
+	/* XXX: I have a wild number of fds here, now I need to fix this */
 	/* the fanin and fanout have the same number of fds */
-	t->child[1]->child[1]->fd0 = t->fd1;
+	t->child[1]->fd0 = t->fd0;
+	t->child[1]->fd1 = t->fd1;
+	if(t->fd1 == 0)
+		t->child[0]->fd1 = 10; // XXX: fixme! with real value
+//	t->child[0]->child[0]->fd0 = t->child[0]->child[0]->fd1;
 	return t;
 }
 
@@ -135,11 +138,10 @@ simplemung(tree *t)
 {
 	tree *u;
 	struct io *s;
-
 	t = tree1(SIMPLE, t);
 	s = openstr();
 	pfmt(s, "%t", t);
-	t->str = strdup((char *)s->strp);
+	t->str = strdup(s->strp);
 	closeio(s);
 	for(u = t->child[0];u->type==ARGLIST;u = u->child[0]){
 		if(u->child[1]->type==DUP

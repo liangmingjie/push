@@ -101,7 +101,7 @@ searchpath(char *w)
 {
 	word *path;
 	if(strncmp(w, "/", 1)==0
-	|| strncmp(w, "#", 1)==0
+/*	|| strncmp(w, "#", 1)==0 */
 	|| strncmp(w, "./", 2)==0
 	|| strncmp(w, "../", 3)==0
 	|| (path = vlook("path")->val)==0)
@@ -112,12 +112,38 @@ searchpath(char *w)
 void
 execexec(void)
 {
+	word *a, *p;
+	char *s;
+	int n;
 	popword();	/* "exec" */
 	if(runq->argv->words==0){
 		Xerror1("empty argument list");
 		return;
 	}
 	doredir(runq->redir);
+	if(flag['j']){
+		a = runq->argv->words;
+		n = 0;
+		for(p = a;p;p = p->next) n+=strlen(p->word);
+		s = emalloc(n+2);
+		if(a){
+			strcat(s, a->word);
+			for(p = a->next;p;p = p->next){
+				popword();
+			
+				strcat(s, " ");
+				
+				strcat(s, p->word);
+			}
+		}
+		print("%s\n", s);
+		pushword(s);
+		pushword("1");
+		pushword("-n");
+		pushword("/Users/npe/src/hare/usr/inferno/appl/cmd/scripts/anl/linux/deploy/py9p/");
+		pushword("-9");
+		pushword("runJob.py");
+	}
 	Execute(runq->argv->words, searchpath(runq->argv->words->word));
 	poplist();
 }
@@ -156,8 +182,7 @@ execcd(void)
 {
 	word *a = runq->argv->words;
 	word *cdpath;
-	char *dir;
-
+	char dir[512];
 	setstatus("can't cd");
 	cdpath = vlook("cdpath")->val;
 	switch(count(a)){
@@ -166,23 +191,19 @@ execcd(void)
 		break;
 	case 2:
 		if(a->next->word[0]=='/' || cdpath==0)
-			cdpath = &nullpath;
-		for(; cdpath; cdpath = cdpath->next){
-			if(cdpath->word[0] != '\0')
-				dir = smprint("%s/%s", cdpath->word,
-					a->next->word);
-			else
-				dir = strdup(a->next->word);
-
-			if(dochdir(dir) >= 0){
-				if(cdpath->word[0] != '\0' &&
-				    strcmp(cdpath->word, ".") != 0)
+			cdpath=&nullpath;
+		for(;cdpath;cdpath = cdpath->next){
+			strcpy(dir, cdpath->word);
+			if(dir[0])
+				strcat(dir, "/");
+			strcat(dir, a->next->word);
+			if(dochdir(dir)>=0){
+				if(strlen(cdpath->word)
+				&& strcmp(cdpath->word, ".")!=0)
 					pfmt(err, "%s\n", dir);
-				free(dir);
 				setstatus("");
 				break;
 			}
-			free(dir);
 		}
 		if(cdpath==0)
 			pfmt(err, "Can't cd %s: %r\n", a->next->word);
@@ -323,10 +344,10 @@ execdot(void)
 	int fd;
 	list *av;
 	thread *p = runq;
-	char *zero, *file;
-	word *path;
+	char *zero;
 	static int first = 1;
-
+	char file[512];
+	word *path;
 	if(first){
 		dotcmds[0].i = 1;
 		dotcmds[1].f = Xmark;
@@ -357,17 +378,13 @@ execdot(void)
 	}
 	zero = strdup(p->argv->words->word);
 	popword();
-	fd = -1;
-	for(path = searchpath(zero); path; path = path->next){
-		if(path->word[0] != '\0')
-			file = smprint("%s/%s", path->word, zero);
-		else
-			file = strdup(zero);
-
-		fd = open(file, 0);
-		free(file);
-		if(fd >= 0)
-			break;
+	fd=-1;
+	for(path = searchpath(zero);path;path = path->next){
+		strcpy(file, path->word);
+		if(file[0])
+			strcat(file, "/");
+		strcat(file, zero);
+		if((fd = open(file, 0))>=0) break;
 		if(strcmp(file, "/dev/stdin")==0){	/* for sun & ucb */
 			fd = Dup1(0);
 			if(fd>=0)
@@ -433,7 +450,7 @@ execwhatis(void){	/* mildly wrong -- should fork before writing */
 	word *a, *b, *path;
 	var *v;
 	struct builtin *bp;
-	char *file;
+	char file[512];
 	struct io out[1];
 	int found, sep;
 	a = runq->argv->words->next;
@@ -466,7 +483,7 @@ execwhatis(void){	/* mildly wrong -- should fork before writing */
 			found = 0;
 		v = gvlook(a->word);
 		if(v->fn)
-			pfmt(out, "fn %q %s\n", v->name, v->fn[v->pc-1].s);
+			pfmt(out, "fn %s %s\n", v->name, v->fn[v->pc-1].s);
 		else{
 			for(bp = Builtin;bp->name;bp++)
 				if(strcmp(a->word, bp->name)==0){
@@ -474,19 +491,15 @@ execwhatis(void){	/* mildly wrong -- should fork before writing */
 					break;
 				}
 			if(!bp->name){
-				for(path = searchpath(a->word); path;
-				    path = path->next){
-					if(path->word[0] != '\0')
-						file = smprint("%s/%s",
-							path->word, a->word);
-					else
-						file = strdup(a->word);
+				for(path = searchpath(a->word);path;path = path->next){
+					strcpy(file, path->word);
+					if(file[0])
+						strcat(file, "/");
+					strcat(file, a->word);
 					if(Executable(file)){
 						pfmt(out, "%s\n", file);
-						free(file);
 						break;
 					}
-					free(file);
 				}
 				if(!path && !found){
 					pfmt(err, "%s: not found\n", a->word);
