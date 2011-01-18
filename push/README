@@ -1,4 +1,4 @@
-This is the new unix port of push. 
+This is the old unix port of push. 
 
 It should work on any unices supported by plan 9 port(a unix Plan 9 compatibility layer, it's available at http://swtch.com/plan9port/ please install it first)
 
